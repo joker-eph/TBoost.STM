@@ -217,7 +217,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   boost::stm::transaction_state clear()
+   void clear()
    {
       boost::stm::transaction t;
 
@@ -230,7 +230,7 @@ public:
 
       t.write(head_).clear();
 
-      return t.end();
+      t.end();
    }
 
 private:
