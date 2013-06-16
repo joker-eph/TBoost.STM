@@ -35,7 +35,6 @@
 //#define MAP_MEMORY_POOL 1
 
 #include <stdlib.h>
-#include <malloc.h>
 #include <memory.h>
 #include <map>
 #include <vector>
