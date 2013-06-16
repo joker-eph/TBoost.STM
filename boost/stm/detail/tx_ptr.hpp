@@ -89,7 +89,7 @@ public:
 
 private:
     
-   mutable transaction &t_;
+   transaction &t_;
    mutable T *tx_ptr_;
    mutable bool written_;
 };
@@ -126,8 +126,8 @@ public:
    }
 
 private:   
-   mutable boost::stm::transaction &t_;
-   mutable T &tx_obj_;
+   boost::stm::transaction &t_;
+   T &tx_obj_;
 };
 
 
