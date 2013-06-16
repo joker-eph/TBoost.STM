@@ -193,7 +193,7 @@ public:
 
    bool remove(RedBlackNode<T> const &node);
 
-   boost::stm::transaction_state clear();
+   void clear();
    void cheap_clear();
 
    void print(std::ofstream &o);
@@ -595,7 +595,7 @@ void RedBlackTree<T>::internal_cheap_clear(RedBlackNode<T> *cur)
 
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T>
-boost::stm::transaction_state RedBlackTree<T>::clear()
+void RedBlackTree<T>::clear()
 {
    using namespace nRedBlackTree; using namespace boost::stm;
    transaction t;
