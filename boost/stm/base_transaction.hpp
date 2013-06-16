@@ -84,14 +84,6 @@ typedef boost::mutex PLOCK;
 #endif
 
 
-//-----------------------------------------------------------------------------
-// boolean which is used to invoke "begin_transaction()" upon transaction
-// object construction (so two lines of code aren't needed to make a
-// transaction start, in case the client wants to start the transaction
-// immediately).
-//-----------------------------------------------------------------------------
-bool const begin_transaction = true;
-
 unsigned const kInvalidThread = 0xffffffff;
 
 //-----------------------------------------------------------------------------

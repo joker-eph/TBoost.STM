@@ -598,7 +598,7 @@ template <typename T>
 boost::stm::transaction_state RedBlackTree<T>::clear()
 {
    using namespace nRedBlackTree; using namespace boost::stm;
-   transaction t(begin_transaction);
+   transaction t;
 
    RedBlackNode<T> &curLeft = t.write(*root->left());
    internal_clear(curLeft, t);
