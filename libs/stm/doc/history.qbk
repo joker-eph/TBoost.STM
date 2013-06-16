@@ -1,0 +1,27 @@
+[/
+  (C) Copyright 2009 Justin E. Gottchlich. 
+  (C) Copyright 2009 Vicente J. Botet Escriba
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
+[section:changes  Appendix A: History]
+
+[heading [*Version 0.1, XX YY, 2009] ['Announcement of STM]]
+
+[*Features:]
+
+* 
+
+[*Toolsets:]
+
+* Tested with static library.
+* Tested on cygwin gcc 3.4.6.
+
+[heading [*Tickets:]]
+
+[*v0.1#1: .]
+
+
+[endsect]

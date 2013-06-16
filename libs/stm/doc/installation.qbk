@@ -1,0 +1,82 @@
+[/
+  (C) Copyright 2009 Justin E. Gottchlich. 
+  (C) Copyright 2009 Vicente J. Botet Escriba
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
+
+[/======================================]
+[section:install Installing STM]
+[/======================================]
+
+[/=================================]
+[heading Getting Boost.STM]
+[/=================================]
+
+You can get the last stable release of Boost.STM by downloading [^stm.zip] from the
+[@http://www.boost-consulting.com/vault/index.php?directory=Concurrent%20Programming Boost Vault]
+
+You can also access the latest (unstable?) state from the [@https://svn.boost.org/svn/boost/sandbox/stm Boost Sandbox].
+
+[/=================================]
+[heading Building Boost.STM]
+[/=================================]
+
+Boost.STM is not a header only library. You need to compile it before use.
+
+    cd libs/stm/build
+    bjam
+
+[/=========================]
+[heading Requirements]
+[/=========================]
+
+[*Boost.STM] depends on Boost. You must use either Boost version 1.38.x
+or the version in SVN trunk (even if Boost version 1.35.x should works also). 
+In particular, [*Boost.STM] depends on:
+
+
+[variablelist
+[
+    [[@http://www.boost.org/libs/dynamic_bitset [*Boost.DynamicBitset]]]
+    [dynamic_bitsets]
+]
+[
+    [[@http://www.boost.org/libs/synchro [*Boost.Synchro]]]
+    [synchronization primitives]
+]
+[
+    [[@http://www.boost.org/libs/thread [*Boost.Thread]]]
+    [threads and synchronization primitives]
+]
+]
+
+
+[/========================]
+[heading Exceptions safety]
+[/========================]
+
+All functions in the library are exception-neutral and provide strong guarantee of exception safety as long as
+the underlying parameters provide it.
+
+[/====================]
+[heading Thread safety]
+[/====================]
+
+All functions in the library are thread-unsafe except when noted explicitly.
+
+
+[/=======================]
+[heading Tested compilers]
+[/=======================]
+
+Currently, [*Boost.STM] has been tested in the following compilers/platforms:
+
+*  GCC 3.4.4 Cygwin
+
+[note Please send any questions, comments and bug reports to boost <at> lists <dot> boost <dot> org.]
+
+[endsect]
+

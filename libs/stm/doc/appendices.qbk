@@ -1,0 +1,76 @@
+[/
+[/
+  (C) Copyright 2009 Justin E. Gottchlich. 
+  (C) Copyright 2009 Vicente J. Botet Escriba
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
+[/=================]
+[section Appendices]
+[/=================]
+
+[include history.qbk]
+
+[include rationale.qbk]
+
+[include implementation.qbk]
+
+[include acknowledgements.qbk]
+
+[include tests.qbk]
+
+[include tickets.qbk]
+
+
+[/=====================================]
+[section:todo  Appendix E: Future plans]
+[/=====================================]
+
+[heading Tasks to do before review]
+
+[section Boostifying STM]
+
+[heading Porting to Boost]
+* [*DONE] set boost directory architecture
+* [*DONE] name files in lowercase
+* [*DONE] Replace bit_vector by std::bitset or boost::dynamic_bitset (BOOST_STM_BLOOM_FILTER_USE_DYNAMIC_BITSET)
+* [*DONE] Add a config file with all the configuration macros
+* [*DONE] Add a stm file at the boost level including all the STM interfaces
+* [*DONE] Replace Sleep by boost::this_thread::sleep
+* [*DONE] Replace pthread_mutex by boost::mutex
+* Replace THREAD_ID by boost::thread_id
+* Replace auto_lock by boost::synchro::unique_locker and redefine use_lock macros 
+* Redifine var_auto_lock
+* Add an scoped guard for transaction::lock/unlock
+* use lock_guard when lock/unlock
+
+[heading Restructure the data]
+* Separate the data that is global, thread local or specific to a transaction.
+* Separate the interface from the implementation
+* Define access to these data using functions
+
+[heading Tests]
+* Add unit tests
+
+[heading Documentation]
+* [*DONE] Create the empty files and set the doc generation environement
+* Write the Motivation section
+* Write the Getting started section
+* Write the Tutorial section
+* Write the Example section
+* Write the Reference section
+
+[heading Other tasks]
+* Implement a generic blom_filter
+* Replace the user class transactional_object by an internal transactional_object_cache  
+
+[endsect]
+
+[heading For later releases]
+
+[endsect]
+
+[endsect]
+

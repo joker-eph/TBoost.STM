@@ -1,0 +1,27 @@
+[/
+  (C) Copyright 2009 Justin E. Gottchlich. 
+  (C) Copyright 2009 Vicente J. Botet Escriba
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
+[section  Appendix F: Tickets]
+
+
+[table
+[[Kind] [Identifier]     [Description]   [Resolution] [State]  [Tests] [Version]]
+[
+    [feature]
+    [v0.0#1]
+    [boostify]
+    [XXX]
+    [Open]
+    [See array_locker_tests]
+    [v1.0]
+]
+]
+
+
+
+[endsect]

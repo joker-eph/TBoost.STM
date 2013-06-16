@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\Debug\</OutDir>
+    <IntDir>.\Debug\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;C:\Research\programming\pthreads\Pre-built.2\include</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;C:\Research\programming\pthreads\Pre-built.2\lib</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\Release\</OutDir>
+    <IntDir>.\Release\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;C:\Research\programming\pthreads\Pre-built.2\include</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;C:\Research\programming\pthreads\Pre-built.2\lib</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>../;../../;../../../;../../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Debug\</AssemblerListingLocation>
+      <BrowseInformation>true</BrowseInformation>
+      <PrecompiledHeaderOutputFile>.\Debug\TBoostSTM.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\Debug\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Debug\</ProgramDataBaseFileName>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <Midl>
+      <TypeLibraryName>.\Debug\TBoostSTM.tlb</TypeLibraryName>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Debug\TBoostSTM.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OutputFile>.\Debug\TBoostSTM.exe</OutputFile>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MaxSpeed</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>../;../../;../../../;../../../../;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
+      <PrecompiledHeaderOutputFile>.\Release\TBoostSTM.pch</PrecompiledHeaderOutputFile>
+      <ObjectFileName>.\Release\</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
+    </ClCompile>
+    <Midl>
+      <TypeLibraryName>.\Release\TBoostSTM.tlb</TypeLibraryName>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\Release\TBoostSTM.bsc</OutputFile>
+    </Bscmake>
+    <Link>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <SubSystem>Console</SubSystem>
+      <OutputFile>.\Release\TBoostSTM.exe</OutputFile>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\bloom_filter.cpp" />
+    <ClCompile Include="..\..\src\contention_manager.cpp" />
+    <ClCompile Include="..\..\test\globalIntArr.cpp" />
+    <ClCompile Include="..\..\test\irrevocableInt.cpp" />
+    <ClCompile Include="..\..\test\isolatedComposedIntLockInTx.cpp" />
+    <ClCompile Include="..\..\test\isolatedComposedIntLockInTx2.cpp" />
+    <ClCompile Include="..\..\test\isolatedInt.cpp" />
+    <ClCompile Include="..\..\test\isolatedIntLockInTx.cpp" />
+    <ClCompile Include="..\..\test\litExample.cpp" />
+    <ClCompile Include="..\..\test\lotExample.cpp" />
+    <ClCompile Include="..\..\test\nestedTxs.cpp" />
+    <ClCompile Include="..\..\test\pointer_test.cpp" />
+    <ClCompile Include="..\..\test\smart.cpp" />
+    <ClCompile Include="..\..\test\stm.cpp" />
+    <ClCompile Include="..\..\test\test1writerNreader.cpp" />
+    <ClCompile Include="..\..\test\testatom.cpp" />
+    <ClCompile Include="..\..\test\testBufferedDelete.cpp" />
+    <ClCompile Include="..\..\test\testEmbedded.cpp" />
+    <ClCompile Include="..\..\test\testHashMap.cpp" />
+    <ClCompile Include="..\..\test\testHashMapAndLinkedListsWithLocks.cpp" />
+    <ClCompile Include="..\..\test\testHashMapWithLocks.cpp" />
+    <ClCompile Include="..\..\test\testHT_latm.cpp" />
+    <ClCompile Include="..\..\test\testInt.cpp" />
+    <ClCompile Include="..\..\test\testLinkedList.cpp" />
+    <ClCompile Include="..\..\test\testLinkedListWithLocks.cpp" />
+    <ClCompile Include="..\..\test\testLL_latm.cpp" />
+    <ClCompile Include="..\..\test\testPerson.cpp" />
+    <ClCompile Include="..\..\test\testRBTree.cpp" />
+    <ClCompile Include="..\..\src\transaction.cpp" />
+    <ClCompile Include="..\..\test\transferFun.cpp" />
+    <ClCompile Include="..\..\test\txLinearLock.cpp" />
+    <ClCompile Include="..\..\test\usingLockTx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\boost\stm\detail\auto_lock.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\base_transaction.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\bit_vector.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\bloom_filter.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\config.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\contention_manager.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\datatypes.hpp" />
+    <ClInclude Include="..\..\test\globalIntArr.h" />
+    <ClInclude Include="..\..\test\irrevocableInt.h" />
+    <ClInclude Include="..\..\test\isolatedComposedIntLockInTx.h" />
+    <ClInclude Include="..\..\test\isolatedComposedIntLockInTx2.h" />
+    <ClInclude Include="..\..\test\isolatedInt.h" />
+    <ClInclude Include="..\..\test\isolatedIntLockInTx.h" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\jenkins_hash.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\latm_def_full_impl.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\latm_def_tm_impl.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\latm_def_tx_impl.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\latm_dir_full_impl.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\latm_dir_tm_impl.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\latm_dir_tx_impl.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\latm_general_impl.hpp" />
+    <ClInclude Include="..\..\test\litExample.h" />
+    <ClInclude Include="..\..\test\lotExample.h" />
+    <ClInclude Include="..\..\test\main.h" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\memory_pool.hpp" />
+    <ClInclude Include="..\..\test\nestedTxs.h" />
+    <ClInclude Include="..\..\..\..\boost\stm\tx\numeric.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\tx\pointer.hpp" />
+    <ClInclude Include="..\..\test\pointer_test.h" />
+    <ClInclude Include="..\..\test\smart.h" />
+    <ClInclude Include="..\..\test\testatom.h" />
+    <ClInclude Include="..\..\test\testBufferedDelete.h" />
+    <ClInclude Include="..\..\test\testEmbedded.h" />
+    <ClInclude Include="..\..\test\testHashMap.h" />
+    <ClInclude Include="..\..\test\testHashMapAndLinkedListsWithLocks.h" />
+    <ClInclude Include="..\..\test\testHashMapWithLocks.h" />
+    <ClInclude Include="..\..\test\testHT_latm.h" />
+    <ClInclude Include="..\..\test\testInt.h" />
+    <ClInclude Include="..\..\test\testLinkedList.h" />
+    <ClInclude Include="..\..\test\testLinkedListWithLocks.h" />
+    <ClInclude Include="..\..\test\testLL_latm.h" />
+    <ClInclude Include="..\..\test\testPerson.h" />
+    <ClInclude Include="..\..\test\testRBTree.h" />
+    <ClInclude Include="..\..\..\..\boost\stm\transaction.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\transaction_bookkeeping.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\transaction_conflict.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\transaction_impl.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\transactions_stack.hpp" />
+    <ClInclude Include="..\..\test\transferFun.h" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\tx_ptr.hpp" />
+    <ClInclude Include="..\..\test\txLinearLock.h" />
+    <ClInclude Include="..\..\test\usingLockTx.h" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\vector_map.hpp" />
+    <ClInclude Include="..\..\..\..\boost\stm\detail\vector_set.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\..\..\boost\stm\detail\transaction_impl.hpp~">
+      <FileType>Document</FileType>
+    </CustomBuild>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,5 @@
+project boost
+    : requirements 
+    : usage-requirements 
+    : build-dir bin.v2
+    ;

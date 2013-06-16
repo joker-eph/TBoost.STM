@@ -1,0 +1,106 @@
+[/
+  (C) Copyright 2009 Justin E. Gottchlich. 
+  (C) Copyright 2009 Vicente J. Botet Escriba
+ /
+ / Distributed under the Boost Software License, Version 1.0. (See accompanying
+ / file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+ /]
+
+
+[section:uniform Using Thread, Interprocess and Null synchronization mechanisms uniformly]
+
+One of the problems when doing multi threaded application with Boost.Thread and Boost.Interprocess is that the synchronization mechanism of these two libraries even if they are very close since the release 1.35, there are some minor differences that make quite difficult to design a class that can work independently with synchronization mechanisms of both libraries.
+
+This library proposes some classes that allows to write code that can be used indistinguishably with thread or interprocess synchronization mechanisms. This section is inspired on the work from [*C++ Threading - A Generic-Programming Approach] - Kevlin Henney.
+
+
+[*Lock substitutability]
+
+The Boost (C++0x) mutexes have associated a category which  form a sub-typing hierarchy:
+
+    ExclusiveLockable <- SharedLockable <- UpgradeLockable
+
+[category_tag_hierarchy]
+
+Locking behavior can be further categorized as:
+
+* Re-entrancy: recursive or not
+
+    non_recursive <- recursive
+
+* Scope: whether the lock is usable with a mono-threaded, multi-threaded or multi-process context
+
+    mono_threaded <- multi_threaded <- multi_process
+
+* Lifetime: The lifetime of a lock could be associated to the process, the kernel or the file-system
+
+    process_lifetime <- kernel_lifetime <- filesystem_lifetime
+
+* Timed interface: has or not a timed interfaces
+
+    hasnt_timed_interface <- has_timed_interface
+
+Substitutability applies both to the degree of syntactic support and to the locking semantics
+
+* A recursive mutex and binary semaphore are substitutable in code written against a exclusive mutex
+* A null mutex is substitutable for all others in a single-threaded environment
+
+
+We can see these axes of variation expressed against some
+Boost synchronization mechanisms (from now bip stands for boost::interprocess):
+
+* boost::mutex: ExclusiveLock, non-recursive, has-not-timed-interface, multi-threaded
+* boost::shared_mutex: UpgradableLock, non-recursive, has-timed-interface, multi-threaded
+* bip::synchro::null_mutex: UpgradableLock, recursive, has-timed-interface, mono-threaded
+* bip::synchro::interprocess_recursive_mutex ExclusiveLock, recursive, has-timed-interface, multi_process.
+
+[*Lock traits]
+
+The Boost.Synchro library contains a set of very specific traits classes, some of them encapsulate a single trait for
+a Lockable type; for example, is a lock recursive (is_recursive), is useful in a multi threaded context
+(is_multi_threaded).
+
+The Boost.Synchro lock-traits classes share a unified design that mimic the one of Boost.TypeTraits: each class
+inherits from a the type true_type if the type has the specified property and inherits from false_type otherwise.
+
+Boost.Synchro also contains a set of classes that perform a specific transformation on a type;
+for example, they can remove a top-level const or volatile qualifier from a type.
+Each class that performs a transformation defines a single typedef-member type that is the result of the transformation.
+
+[*Finding the best lock]
+
+Inverse traits can match a lockable type based on specific traits, for a given family of lock types.
+
+It is also possible to specify characteristics to perform a reverse lookup to find a primitive lock type, either by
+exact match or by substitutable match.
+
+[*Synchronization family]
+
+A class that will do internal locking can be parameterized by the type of synchronization family needed to achieve
+the desired level of concurrency control. This depends of the usage scope of this class, and this can be
+mono_threaded, multi_threaded, multi_process.
+
+For example the thread_synchronization_family can be used to instantiate a message_queue class in a multi_threaded
+environment, all public methods will be thread-safe, with the corresponding overhead that implies. In contrast, if a
+null_synchronization_policy class is used to instantiate message_queue, all public methods will not be thread-safe,
+and there will be no additional overhead.
+
+[*Syntactic lock traits]
+
+The Boost.Synchro library also contains classes that try to remove the syntactic differences between the synchronization
+mechanisms of the Boost.Thread and Boost::Interprocess libraries. The differences identified up to now are:
+
+* The scoped locks live in a different namespace and some have different names with the same semantic. IMO these
+should be shared.
+* The exception thrown lives in a different name space and different names with the same semantic.
+* This exception should be common.
+* The move semantics (&&) are expressed with a class named differently. This class could be a good candidate of Boost
+library by itself.
+* The scoped locks can be initialized with static const variables in order to overload the constructor for lock
+adoption, lock deferral or try to lock. Even if the name of these variables is the same,  these variables live in
+different namespace. It would be nice if these both libraries use the same type and the same variables
+
+I hope that these two Boost libraries will merge their synchronization mechanisms in a near future. Waiting for this merge this could serve as a temporary solution.
+
+[endsect]
+

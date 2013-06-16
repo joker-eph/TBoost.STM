@@ -1,0 +1,49 @@
+#
+# Boost.Synchro
+# Build script for tests.
+#
+# Copyright (c) 2008-2009 Vicente J. Botet Escriba]
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+# bring in rules for testing
+import testing ;
+
+if ! $(BOOST_ROOT)
+{
+    BOOST_ROOT = [ modules.peek : BOOST_ROOT ] ;
+}
+
+project
+    : requirements
+#       <library>/boost/test//boost_unit_test_framework/<link>static
+#       <library>/boost/thread//boost_thread/<link>static
+#       <library>/boost_1_39_0/libs/test/build//boost_unit_test_framework/<link>static
+        <library>../build//boost_STM/<link>static
+#        <library>/boost_1_39_0/libs/thread/build//boost_thread/<link>static
+
+        <include>.
+        <include>../../..
+        <include>/boost_1_39_0
+        <threading>multi
+#       <target-os>cygwin
+#       <interthreadapi>pthread
+#        <variant>debug
+#       <define>BOOST_THREAD_HAS_THREAD_ATTR
+
+    ;
+
+#rule interthreads-run ( sources * )
+#{
+#    return
+#    [ run $(sources)  :  :  : <link>static ]
+##    [ run $(sources)  ../../../../libs/thread/build//boost_thread  :  :  :              : $(sources[1]:B)_lib ]
+#    ;
+#}
+
+
+
+    test-suite "tests"
+        :
+          [ run stm.cpp pointer_test.cpp  smart.cpp  globalIntArr.cpp testHashMapAndLinkedListsWithLocks.cpp irrevocableInt.cpp testHashMapWithLocks.cpp isolatedComposedIntLockInTx.cpp   testInt.cpp isolatedComposedIntLockInTx2.cpp  testLL_latm.cpp isolatedInt.cpp testLinkedList.cpp isolatedIntLockInTx.cpp testLinkedListWithLocks.cpp litExample.cpp testPerson.cpp lotExample.cpp testRBTree.cpp  transferFun.cpp nestedTxs.cpp txLinearLock.cpp testHT_latm.cpp usingLockTx.cpp testHashMap.cpp ]
+    ;
