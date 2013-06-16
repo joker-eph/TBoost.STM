@@ -28,7 +28,7 @@ public:
 
    friend std::ostream& operator<<(std::ostream &str, named_array<T> const &t)
    {
-      str << 0 == t.name_ ? "" : t.name();
+      str << (0 == t.name_ ? "" : t.name());
       return str;
    }
 

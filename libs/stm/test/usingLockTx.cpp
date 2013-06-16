@@ -468,7 +468,7 @@ void TestLinkedListWithUsingLocks()
    int mainThreadId = kMaxThreads-1;
 
    //TestLinkedListInsertsWithLocks((void*)&mainThreadId);
-   lk_foo((void*)mainThreadId);
+   lk_foo((void*)(intptr_t)mainThreadId);
 
    return;
 
