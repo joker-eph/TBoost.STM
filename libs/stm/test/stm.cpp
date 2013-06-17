@@ -72,7 +72,7 @@ bool kDoRemoval = false;
 bool kDoLookup = false;
 bool kDoMove = false;
 bool kMoveSemantics = false;
-std::string bench = "rbtree";
+std::string bench = "";
 std::string updateMethod = "deferred";
 std::string insertAmount = "50000";
 
