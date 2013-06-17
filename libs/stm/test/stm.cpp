@@ -85,16 +85,16 @@ void usage()
 {
    cout << "DracoSTM usage:" << endl << endl;
    cout << "  -bench <name> - 'rbtree', 'linkedlist', 'hashmap' (or 'hashtable')" << endl;
-   cout << "                  'irrevocable_int'" << endl;
-   cout << "                  'isolated_int'" << endl;
-   cout << "                  'isolated_int_lock'" << endl;
-   cout << "                  'isolated_composed_int_lock'" << endl;
-   cout << "                  'isolated_composed_int_lock2'" << endl;
-   cout << "                  'linkedlist_w_locks' (uses transactions and locks)" << endl;
-   cout << "                  'hashmap_w_locks' (uses transactions and locks)" << endl;
-   cout << "                  'list_hash_w_locks' (uses transactions and locks)" << endl;
-   cout << "                  'tx_linear_lock' (uses transactions and multiple linearly ordered locks)" << endl;
-   cout << "                  'lot_example' (for paper)" << endl;
+   cout << "                  'using_linkedlist'" << endl;
+   cout << "                  'nested_tx'" << endl;
+   cout << "                  'ht'" << endl;
+   cout << "                  'll'" << endl;
+   cout << "                  '1WNR'" << endl;
+   cout << "                  'smart'" << endl;
+   cout << "                  'pointer'" << endl;
+   cout << "                  'accounts'" << endl;
+   cout << "                  'embedded'" << endl;
+   cout << "                  'delete'" << endl;
    cout << "  -def          - do deferred updating transactions" << endl;
    cout << "  -dir          - do direct updating transactions" << endl;
    cout << "  -latm <name>  - 'full', 'tm', 'tx'" << endl;
