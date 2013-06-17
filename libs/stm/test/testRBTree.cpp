@@ -193,7 +193,7 @@ void TestRedBlackTreeWithMultipleThreads()
 
    rbTree->cheap_clear();
    delete rbTree;
-   delete threads;
-   delete threadId;
+   delete[] threads;
+   delete[] threadId;
 }
 
