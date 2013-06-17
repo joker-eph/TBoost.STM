@@ -27,6 +27,6 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@ $(INCLUDES)
 
 clean:
-	rm -rf libs/stm/src/*.o libs/stm/test/*.o; rm TBoost.STM 
+	rm -rf libs/stm/src/*.o libs/stm/test/*.o TBoost.STM
 
 
