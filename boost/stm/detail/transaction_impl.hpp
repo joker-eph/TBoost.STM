@@ -1287,7 +1287,9 @@ inline void boost::stm::transaction::direct_abort
 {
 
 #if LOGGING_COMMITS_AND_ABORTS
+#ifndef DISABLE_READ_SETS
    bookkeeping_.pushBackSizeOfReadSetWhenAborting(readList().size());
+#endif
    bookkeeping_.pushBackSizeOfWriteSetWhenAborting(writeList().size());
 #endif
 
@@ -1337,7 +1339,9 @@ inline void boost::stm::transaction::deferred_abort
    (bool const &alreadyRemovedFromInFlight) throw()
 {
 #if LOGGING_COMMITS_AND_ABORTS
+#ifndef DISABLE_READ_SETS
    bookkeeping_.pushBackSizeOfReadSetWhenAborting(readList().size());
+#endif
    bookkeeping_.pushBackSizeOfWriteSetWhenAborting(writeList().size());
 #endif
 
@@ -1397,7 +1401,9 @@ inline void boost::stm::transaction::invalidating_direct_commit()
    try
    {
 #if LOGGING_COMMITS_AND_ABORTS
+#ifndef DISABLE_READ_SETS
       bookkeeping_.pushBackSizeOfReadSetWhenCommitting(readList().size());
+#endif
       bookkeeping_.pushBackSizeOfWriteSetWhenCommitting(writeList().size());
 #endif
 
@@ -1465,7 +1471,9 @@ inline void boost::stm::transaction::invalidating_deferred_commit()
    try
    {
 #if LOGGING_COMMITS_AND_ABORTS
+#ifndef DISABLE_READ_SETS
       bookkeeping_.pushBackSizeOfReadSetWhenCommitting(readList().size());
+#endif
       bookkeeping_.pushBackSizeOfWriteSetWhenCommitting(writeList().size());
 #endif
 
