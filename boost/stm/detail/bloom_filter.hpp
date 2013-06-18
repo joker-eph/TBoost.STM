@@ -93,7 +93,7 @@ public:
 
 private:
 
-   std::size_t h1_, h2_;
+   uint32_t_size_t h1_, h2_;
 #ifdef BOOST_STM_BLOOM_FILTER_USE_DYNAMIC_BITSET
    boost::dynamic_bitset<> bit_vector1_;
    boost::dynamic_bitset<> bit_vector2_;
