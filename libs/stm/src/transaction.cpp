@@ -353,7 +353,7 @@ void transaction::initialize_thread()
    tss_context_map_type::iterator memIter = tss_context_map_.find(threadId);
    if (tss_context_map_.end() == memIter)
    {
-      tss_context_map_.insert(std::pair<size_t, tx_context*>(threadId, new tx_context));
+      tss_context_map_.insert(std::pair<size_t, tx_context*>(threadId, new tx_context()));
       memIter = tss_context_map_.find(threadId);
       memIter->second->txType = eNormalTx;
    }
