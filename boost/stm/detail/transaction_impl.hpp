@@ -1228,7 +1228,7 @@ inline void boost::stm::transaction::forceOtherInFlightTransactionsWritingThisWr
          // if t's modifiedList is modifying memory we are also modifying, make t bail
          ///////////////////////////////////////////////////////////////////
 #ifdef USE_BLOOM_FILTER
-         if (t->bloom().exists((size_t)i->first))
+         if (t->bloom().exists(i->first))
 #else
          if (t->writeList().end() != t->writeList().find(i->first))
 #endif
@@ -2197,7 +2197,7 @@ inline bool boost::stm::transaction::forceOtherInFlightTransactionsAccessingThis
             //////////////////////////////////////////////////////////////////////
             // if t's readList is reading memory we are modifying, make t bail
             //////////////////////////////////////////////////////////////////////
-            if (t->bloom().exists((size_t)i->first))
+            if (t->bloom().exists(i->first))
             {
                if (allow_stall && t->is_only_reading())// && t->reads() > work)
                {
@@ -2321,7 +2321,7 @@ inline void boost::stm::transaction::forceOtherInFlightTransactionsReadingThisWr
          // if t's readList is reading memory we are modifying, make t bail
          //////////////////////////////////////////////////////////////////////
 #ifdef USE_BLOOM_FILTER
-         if (t->bloom().exists((size_t)i->first))
+         if (t->bloom().exists(i->first))
 #else
          if (t->readList().end() != t->readList().find(i->first))
 #endif

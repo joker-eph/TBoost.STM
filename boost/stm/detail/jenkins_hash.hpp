@@ -66,7 +66,7 @@ typedef unsigned char uint8_t;
 #else
 //# include <stdint.h>    /* attempt to define endianness */
 #endif
-typedef std::size_t uint32_t_size_t;
+typedef unsigned int uint32_t_size_t;
 
 /*
  * My best guess at if you are big-endian or little-endian.  This may

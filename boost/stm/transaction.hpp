@@ -626,7 +626,7 @@ typedef std::map<size_t, boost::stm::bit_vector*> ThreadBitVectorList;
       //----------------------------------------------------------------
       return i != readList().end();
 #else
-      return bloom().exists((size_t)&in);
+      return bloom().exists(&in);
 #endif
    }
 
@@ -913,7 +913,7 @@ private:
       if (i != readList().end()) return in;
 #endif
 #if USE_BLOOM_FILTER
-      if (bloom().exists((size_t)&in)) return in;
+      if (bloom().exists(&in)) return in;
 #endif
 
       //--------------------------------------------------------------------
@@ -947,7 +947,7 @@ private:
             readList().insert((base_transaction_object*)readMem->second);
 #endif
 #if USE_BLOOM_FILTER
-            bloom().insert((size_t)readMem->second);
+            bloom().insert(readMem->second);
 #endif
             unlock(&transactionMutex_);
             unlock_tx();
@@ -969,7 +969,7 @@ private:
          readList().insert((base_transaction_object*)&in);
 #endif
 #if USE_BLOOM_FILTER
-         bloom().insert((size_t)&in);
+         bloom().insert(&in);
 #endif
          unlock(&transactionMutex_);
          unlock_tx();
@@ -994,7 +994,7 @@ private:
          readList().insert((base_transaction_object*)&in);
 #endif
 #if USE_BLOOM_FILTER
-         bloom().insert((size_t)&in);
+         bloom().insert(&in);
 #endif
          unlock_tx();
          ++reads_;
@@ -1033,7 +1033,7 @@ private:
       in.transaction_thread(threadId_);
       writeList().insert(tx_pair((base_transaction_object*)&in, new T(in)));
 #if USE_BLOOM_FILTER
-      bloom().insert((size_t)&in);
+      bloom().insert(&in);
 #endif
       unlock(&transactionMutex_);
       return in;
@@ -1095,7 +1095,7 @@ private:
 #if PERFORMING_WRITE_BLOOM
       if (writeList().empty() ||
          (writeList().size() > 16 &&
-         !wbloom().exists((size_t)&in))) return insert_and_return_read_memory(in);
+         !wbloom().exists(&in))) return insert_and_return_read_memory(in);
 #else
       if (writeList().empty()) return insert_and_return_read_memory(in);
 #endif
@@ -1122,7 +1122,7 @@ private:
       //----------------------------------------------------------------
       if (i != readList().end()) return in;
 #else
-      if (bloom().exists((size_t)&in)) return in;
+      if (bloom().exists(&in)) return in;
 #endif
       lock_tx();
 #ifndef DISABLE_READ_SETS
@@ -1133,7 +1133,7 @@ private:
 #endif
 #endif
 #if USE_BLOOM_FILTER
-      bloom().insert((size_t)&in);
+      bloom().insert(&in);
 #endif
       unlock_tx();
       ++reads_;
@@ -1186,7 +1186,7 @@ private:
       //     memory, so we need to add it to our tx.
       //----------------------------------------------------------------------
 #if USE_BLOOM_FILTER
-      bloom().insert((size_t)&in);
+      bloom().insert(&in);
 #endif
 #if PERFORMING_WRITE_BLOOM
       wbloom().set_bv1(bloom().h1());
@@ -1218,7 +1218,7 @@ private:
       if (in.transaction_thread() != boost::stm::kInvalidThread)
       {
          lock_tx();
-         bloom().insert((size_t)&in);
+         bloom().insert(&in);
          unlock_tx();
          writeList().insert(tx_pair((base_transaction_object*)&in, (base_transaction_object*)0));
       }
@@ -1230,7 +1230,7 @@ private:
       else
       {
          lock_tx();
-         bloom().insert((size_t)&in);
+         bloom().insert(&in);
          unlock_tx();
          // check the ENTIRE write container for this piece of memory in the
          // second location. If it's there, it means we made a copy of a piece

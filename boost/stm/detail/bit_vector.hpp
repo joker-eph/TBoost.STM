@@ -15,9 +15,9 @@
 #define BOOST_STM_BIT_VECTOR_H
 
 #include <string.h>
+#include <cstdio>
 #include <math.h>
-
-//#define def_bit_vector_size 4194304
+#include <iostream>
 
 //---------------------------------------------------------------------------
 // smaller allocation size: potentially more conflicts but more chance to
@@ -30,56 +30,54 @@
 #define def_bit_vector_size 65536
 //#define def_bit_vector_size 131072
 //#define def_bit_vector_size 1048576
-#define def_bit_vector_alloc_size def_bit_vector_size / 32
-#define def_bit_vector_byte_size def_bit_vector_alloc_size * 4
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 namespace boost { namespace stm {
-   typedef size_t chunk_type;
-   size_t const chunk_size = sizeof(chunk_type);
-   size_t const byte_size = 8;
-   size_t const chunk_bits = chunk_size * byte_size;
-   size_t const chunk_shift = 5;
-   size_t const chunk_shift_bits = (int)pow((double)2.0, (double)chunk_shift) - 1;
-
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 class bit_vector
 {
 public:
+   typedef size_t chunk_type; // Could have a SSE/AVX implementation
+   static size_t const byte_size = 8;
+   static size_t const chunk_bits = sizeof(chunk_type) * byte_size;
+   static size_t const chunk_shift_bits = chunk_bits - 1; // Works for power of 2!
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
    bit_vector()
    {
-      memset(bits_, 0, def_bit_vector_byte_size);
+      clear(); // zero initialize
    }
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
-   size_t operator[](size_t const rhs) const
+   chunk_type operator[](size_t const idx) const
    {
       //---------------------------------------------------------------------
       // (1) select the correct chunk from the bits_ array.
-      // (2) select the right bit in the chunk ( rhs % chunk_size ) and turn
-      //     that bit on ( 1 << ( correct bit ) )
-      // (3) perform bitwise AND, this'll return 1 if the bits_ array has
-      //     a 1 in the specific bit location
+      // Hopefully the compiler generates a shift because sizeof() is likely
+      // to be a power of two
+      const size_t bit_idx = idx_to_bit_idx(idx);
+      // (2) select the right bit in the chunk ( rhs % chunk_size )
+      const chunk_type chunk_bit_pos = idx_to_chunk_idx(idx);
+      // (3) perform bitwise AND, this'll leave "chunk_bit_pos" set to 1 if
+      //     the bits_ array has a 1 in the specific bit location
+      const chunk_type new_chunk = bits_[bit_idx] & ((chunk_type)1 << chunk_bit_pos);
       // (4) shift it back to the first bit location so we return a 0 or 1
+      //     it is probably better than casting to bool here, since the
+      //     compiler would have to perform a comparison
       //---------------------------------------------------------------------      
-      return ( bits_[(rhs >> chunk_shift)] & (1 << rhs & chunk_shift_bits) ) 
-         >> rhs % chunk_bits;
-      //return ( bits_[rhs / chunk_bits] & (1 << rhs % chunk_bits) ) 
-      //   >> rhs % chunk_bits;
+      return new_chunk >> chunk_bit_pos;
    }
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
    void clear()
    {
-      memset(bits_, 0, def_bit_vector_byte_size);
+      memset(bits_, 0, sizeof(bits_));
    }
 
    //------------------------------------------------------------------------
@@ -88,34 +86,46 @@ public:
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
-   size_t const alloc_size() const { return def_bit_vector_alloc_size; }
+   size_t const alloc_size() const { return sizeof(bits_); }
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
-   void set(size_t rhs) 
+   void set(size_t idx)
    {
-      bits_[(rhs >> chunk_shift)] |= 1 << (rhs & chunk_shift_bits); 
+     //---------------------------------------------------------------------
+     // (1) select the correct chunk from the bits_ array.
+     // Hopefully the compiler generates a shift because sizeof() is likely
+     // to be a power of two
+     const size_t bit_idx = idx_to_bit_idx(idx);
+     // (2) select the right bit in the chunk ( rhs % chunk_size )
+     const chunk_type chunk_bit_pos = idx_to_chunk_idx(idx);
+     // (3) perform bitwise AND, this'll leave "chunk_bit_pos" set to 1 if
+     //     the bits_ array has a 1 in the specific bit location
+      bits_[bit_idx] |=  ((chunk_type)1 << chunk_bit_pos);
    }
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
-   void reset(size_t rhs) 
-   { 
-      bits_[(rhs >> chunk_shift)] &= 0 << (rhs & chunk_shift_bits); 
+   // Reset a position (set to 0)
+   void reset(size_t idx)
+   {
+      // Compute a mask by first having the target bit set to 1 and reversing
+      chunk_type mask = ~((chunk_type)1 << (idx & chunk_shift_bits));
+      bits_[idx_to_bit_idx(idx)] &= mask;
    }
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
-   bool test(size_t rhs)
+   bool test(size_t idx) const
    {
-      return ( bits_[(rhs >> chunk_shift)] & (1 << (rhs & chunk_shift_bits)) ) > 0 ? true : false; 
+      return operator[](idx);
    }
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
    size_t intersects(bit_vector const & rhs) const
    {
-      for (register size_t i = 0; i < def_bit_vector_alloc_size; ++i)
+      for (register size_t i = 0; i < sizeof(bits_)/sizeof(bits_[0]); ++i)
       {
          if (bits_[i] & rhs.bits_[i]) return 1;
       }
@@ -124,8 +134,24 @@ public:
    }
 
 private:
+   // Select the correct chunk from the bits_ array.
+   static const size_t idx_to_bit_idx(size_t const idx) {
+      // Hopefully the compiler generates a shift because sizeof() is
+      // likely to be (always?) a power of two
+      return idx/sizeof(chunk_type);
+   }
 
-   chunk_type bits_[def_bit_vector_alloc_size];
+   // Select the right bit in the chunk
+   static const chunk_type idx_to_chunk_idx(chunk_type idx) {
+      // ( rhs % sizeof(chunk_type) )
+      // chunk_size is always a power of 2, then bitwise and is the trick!
+      return idx & chunk_shift_bits;
+   }
+
+   // The real array containing the data. Size is know at compile time
+   // The "+1" is only useful if "def_bit_vector_size" is not a multiple
+   // of sizeof(chunk_type)
+   chunk_type bits_[def_bit_vector_size/sizeof(chunk_type)+1];
 };
 
 }

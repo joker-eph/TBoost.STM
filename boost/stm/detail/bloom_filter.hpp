@@ -52,20 +52,20 @@ public:
     {}
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
-   void insert(std::size_t const &rhs)
+   void insert(const void *rhs)
    {
       h1_ = h2_ = 0;
-      hashlittle2((void*)&rhs, size_of_size_t, &h1_, &h2_);
+      hashlittle2(rhs, size_of_size_t, &h1_, &h2_);
       bit_vector1_.set( h1_ & bitwiseAndOp );
       bit_vector2_.set( h2_ & bitwiseAndOp );
    }
 
    //------------------------------------------------------------------------
    //------------------------------------------------------------------------
-   bool exists(std::size_t const &rhs)
+   bool exists(const void *rhs)
    {
       h1_ = h2_ = 0;
-      hashlittle2((void*)&rhs, size_of_size_t, &h1_, &h2_);
+      hashlittle2(rhs, size_of_size_t, &h1_, &h2_);
       return bit_vector1_.test( h1_ & bitwiseAndOp ) &&
          bit_vector2_.test( h2_ & bitwiseAndOp );
    }
@@ -78,8 +78,8 @@ public:
          && bit_vector2_.intersects(rhs.bit_vector2_);
    }
 
-   std::size_t h1() const { return h1_; }
-   std::size_t h2() const { return h2_; }
+   uint32_t_size_t h1() const { return h1_; }
+   uint32_t_size_t h2() const { return h2_; }
 
    void set_bv1(std::size_t rhs) { bit_vector1_.set( rhs & bitwiseAndOp ); }
    void set_bv2(std::size_t rhs) { bit_vector2_.set( rhs & bitwiseAndOp ); }
