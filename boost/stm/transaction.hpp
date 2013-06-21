@@ -1659,8 +1659,6 @@ private:
    static ThreadMapTxFileAndNumber threadFileAndNumberMap_;
    std::map<TxFileAndNumber, size_t> &txFileAndNumberMap_;
 
-   mutable size_t abortedBy_;
-   mutable size_t txId_;
 #endif
 
    public:

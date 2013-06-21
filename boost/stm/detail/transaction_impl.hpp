@@ -642,7 +642,7 @@ inline bool boost::stm::transaction::restart()
    put_tx_inflight();
 
 #if CAPTURING_PROFILE_DATA
-   ostrRef_ << "TxBegin:            " << txTime() << "\t" << txId_ << endl;
+   ostrRef_ << "TxBegin:            " << txTime() << endl;
 #endif
 
 #if 0
@@ -1348,7 +1348,7 @@ inline void boost::stm::transaction::deferred_abort
    state_ = e_aborted;
 
 #if CAPTURING_PROFILE_DATA
-   ostrRef_ << "TxAbort:            " << txTime()  << " " << abortedBy_ << " ";
+   ostrRef_ << "TxAbort:            " << txTime()  << " ";
    if (this->is_only_reading()) ostrRef_ << "R";
    else if (this->is_only_writing()) ostrRef_ << "W";
    else if (this->is_reading_and_writing()) ostrRef_ << "RW";
