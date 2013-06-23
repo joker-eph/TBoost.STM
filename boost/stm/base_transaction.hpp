@@ -177,7 +177,7 @@ typedef aborted_transaction_exception aborted_tx;
    inline int unlock(PLOCK &lock) { return pthread_mutex_unlock(&lock); }
    inline int unlock(PLOCK *lock) { return pthread_mutex_unlock(lock); }
 #endif
-#else
+#else // BOOST_STM_USE_BOOST_MUTEX
    inline void lock(PLOCK &lock) { lock.lock(); }
    inline void lock(PLOCK *lock) { lock->lock(); }
 
@@ -191,48 +191,32 @@ typedef aborted_transaction_exception aborted_tx;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+// Just like boost::lock_guard<>, but not templated. Acquire a lock in ctor and
+// release in dtor. Intended to be used RAII style.
+// Work with pthread_mutex_t or boost::mutex
 class light_auto_lock
 {
 public:
 
-   light_auto_lock(Mutex &mutex) : lock_(NULL)
-   {
-      do_auto_lock(&mutex);
+  light_auto_lock(Mutex *mutex) : m(*mutex)
+  {
+     lock(m);
+  }
+  light_auto_lock(Mutex &mutex) : m(mutex)
+  {
+     lock(&m);
+  }
+
+   ~light_auto_lock() {
+     unlock(m);
    }
-
-   light_auto_lock(Mutex *mutex) : lock_(NULL)
-   {
-      do_auto_lock(mutex);
-   }
-
-   ~light_auto_lock() { do_auto_unlock(); }
-
-   bool has_lock() { return hasLock_; }
-
-   void release_lock() { do_auto_unlock(); }
 
 private:
-
-   void do_auto_lock(Mutex *mutex)
-   {
-      lock_ = mutex;
-      pthread_mutex_lock(mutex);
-      hasLock_ = true;
-   }
-
-   void do_auto_unlock()
-   {
-      if (hasLock_)
-      {
-         hasLock_ = false;
-         pthread_mutex_unlock(lock_);
-      }
-   }
-
-   bool hasLock_;
-   Mutex *lock_;
+   // Rule of three
+   light_auto_lock(light_auto_lock const &);
+   void operator=(light_auto_lock const &);
+   Mutex &m;
 };
-
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
