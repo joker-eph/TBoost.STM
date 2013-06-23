@@ -258,28 +258,14 @@ protected:
 #if USE_STM_MEMORY_MANAGER
     static void return_mem(void *mem, size_t size)
     {
-#ifndef BOOST_STM_USE_BOOST_MUTEX
-      lock(&transactionObjectMutex_);
-        memory_.returnChunk(mem, size);
-      unlock(&transactionObjectMutex_);
-#else
-        boost::lock_guard<boost::mutex> lock(transactionObjectMutex_);
-        memory_.returnChunk(mem, size);
-#endif
+      light_auto_lock auto_lock(transactionObjectMutex_);
+      memory_.returnChunk(mem, size);
     }
 
    static void* retrieve_mem(size_t size)
    {
-#ifndef BOOST_STM_USE_BOOST_MUTEX
-        lock(&transactionObjectMutex_);
-        void *mem = memory_.retrieveChunk(size);
-        unlock(&transactionObjectMutex_);
-#else
-        boost::lock_guard<boost::mutex> lock(transactionObjectMutex_);
-        void *mem = memory_.retrieveChunk(size);
-#endif
-
-      return mem;
+     light_auto_lock auto_lock(transactionObjectMutex_);
+     return memory_.retrieveChunk(size);
    }
 #endif // USE_STM_MEMORY_MANAGER
 
