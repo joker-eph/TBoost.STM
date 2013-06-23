@@ -1482,9 +1482,6 @@ private:
    //--------------------------------------------------------------------------
    size_t threadId_;
 
-   light_auto_lock auto_general_lock_;
-   //locker<Mutex, transactionMutex_> transactionMutexLocker_;
-
    //--------------------------------------------------------------------------
    // ******** WARNING ******** MOVING threadId_ WILL BREAK TRANSACTION.
    // threadId_ MUST ALWAYS THE FIRST MEMBER OF THIS CLASS. THE MEMBER

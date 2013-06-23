@@ -432,14 +432,16 @@ inline void boost::stm::transaction::unlock_all_mutexes()
 inline boost::stm::transaction::transaction() :
 
    //-----------------------------------------------------------------------
-   // These two lines are vitally important ... make sure they are always
-   // the first two members of the class so the member initialization order
-   // always initializes them first.
+   // This line is vitally important ... make sure it is always
+   // the first member of the class so the member initialization order
+   // always initializes it first.
    //-----------------------------------------------------------------------
 
-   threadId_(THREAD_ID),
-   //transactionMutexLocker_(),
-   auto_general_lock_(general_lock()),
+   threadId_(
+       /* Trick using comma operator to acquire a lock immediately, so that no
+        * other construction take place before this one is completely built */
+          (lock(general_lock()),
+       THREAD_ID)),
 
 #if USE_SINGLE_THREAD_CONTEXT_MAP
 ////////////////////////////////////////
@@ -523,8 +525,9 @@ inline boost::stm::transaction::transaction() :
 #endif
    startTime_((size_t)time(0))
 {
-   auto_general_lock_.release_lock();
-    //transactionMutexLocker_.unlock();
+   // Unlock now so that other transactions can be constructed
+   // Keep in mind that the following operations are no longer protected
+   unlock(general_lock());
 
    doIntervalDeletions();
 #if PERFORMING_LATM
