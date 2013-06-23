@@ -932,7 +932,6 @@ private:
          if (in.transaction_thread() != boost::stm::kInvalidThread)
          {
             //lockThreadMutex(in.transaction_thread());
-            //lock_guard2<Mutex> guard(mutex(in.transaction_thread()));
             Mutex& m=mutex(in.transaction_thread());
             stm::lock(m);
 
@@ -953,7 +952,6 @@ private:
             unlock_tx();
             //unlockThreadMutex(in.transaction_thread());
             stm::unlock(m);
-            //guard.unlock();
 
             ++reads_;
 
@@ -1873,27 +1871,7 @@ struct thread_initializer {
     ~thread_initializer() {transaction::terminate_thread();}
 };
 
-#if 0
 
-template <>
-inline int transaction::lock<Mutex> (Mutex &lock) { return transaction::pthread_lock(&lock); }
-
-template <>
-inline int transaction::lock<Mutex*> (Mutex *lock) { return transaction::pthread_lock(lock); }
-
-template <>
-inline int transaction::trylock<Mutex> (Mutex &lock) { return transaction::pthread_trylock(&lock); }
-
-template <>
-inline int transaction::trylock<Mutex*> (Mutex *lock) { return transaction::pthread_trylock(lock); }
-
-template <>
-inline int transaction::unlock<Mutex> (Mutex &lock) { return transaction::pthread_unlock(&lock); }
-
-template <>
-inline int transaction::unlock<Mutex*> (Mutex *lock) { return transaction::pthread_unlock(lock); }
-
-#endif
 
 //---------------------------------------------------------------------------
 // do not remove if (). It is necessary a necessary fix for compilers

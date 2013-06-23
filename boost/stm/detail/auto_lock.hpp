@@ -52,8 +52,6 @@ private:
 };
 
 
-typedef timer_lock_exception timer_err;
-
 class auto_lock
 {
 public:
@@ -219,8 +217,8 @@ private:
 #define use_timed_lock(T, L) if (0 != rand()+1) for (boost::stm::auto_lock ___l(T, L); !___l.done_post_step(); ___l.post_step())
 
 #define try_timed_lock(T, L) try { for (boost::stm::auto_lock ___l(T, L); !___l.done_post_step(); ___l.post_step())
-#define catch_lock_timeout(E) } catch (std::timer_lock_exception &E)
-#define lock_timeout } catch (std::timer_lock_exception &E)
+#define catch_lock_timeout(E) } catch (boost::stm::timer_lock_exception &E)
+#define lock_timeout } catch (boost::stm::timer_lock_exception &E)
 
 } // core namespace 
 }

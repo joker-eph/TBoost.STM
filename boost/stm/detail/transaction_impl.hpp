@@ -478,7 +478,7 @@ inline boost::stm::transaction::transaction() :
    transactionsRef_(transactions(threadId_, true)),
 
 ////////////////////////////////////////
-#else
+#else // USE_SINGLE_THREAD_CONTEXT_MAP
 ////////////////////////////////////////
 #ifndef DISABLE_READ_SETS
    readListRef_(*threadReadLists_.find(threadId_)->second),
@@ -514,7 +514,7 @@ inline boost::stm::transaction::transaction() :
 
 ////////////////////////////////////////
    transactionsRef_(transactions(threadId_, true)),
-#endif
+#endif // USE_SINGLE_THREAD_CONTEXT_MAP
 
    hasMutex_(0), priority_(0),
    state_(e_no_state),
@@ -1355,7 +1355,7 @@ inline void boost::stm::transaction::deferred_abort
    if (this->is_only_reading()) ostrRef_ << "R";
    else if (this->is_only_writing()) ostrRef_ << "W";
    else if (this->is_reading_and_writing()) ostrRef_ << "RW";
-   else 
+   else
    {
       ostrRef_ << "U";
    }
@@ -1581,7 +1581,7 @@ inline void boost::stm::transaction::invalidating_deferred_commit()
       if (this->is_only_reading()) ostrRef_ << "R";
       else if (this->is_only_writing()) ostrRef_ << "W";
       else if (this->is_reading_and_writing()) ostrRef_ << "RW";
-      else 
+      else
       {
          ostrRef_ << "U";
       }
@@ -1952,7 +1952,7 @@ inline void boost::stm::transaction::doIntervalDeletions()
 //----------------------------------------------------------------------------
 #if 0
 
-   for (UnsafeDeletionBuffer::iterator i = unsafeDeletionBuffer_.begin(); 
+   for (UnsafeDeletionBuffer::iterator i = unsafeDeletionBuffer_.begin();
         i != unsafeDeletionBuffer_.end();)
    {
       if (earliestInFlightTx > i->first)
