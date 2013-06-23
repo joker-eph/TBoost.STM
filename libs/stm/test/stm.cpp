@@ -25,6 +25,7 @@
 #include "testLinkedList.h"
 #include "testHashMap.h"
 #include "testRBTree.h"
+#include "testRBTreeV2.h"
 #include "usingLockTx.h"
 #include "nestedTxs.h"
 #include "testLL_latm.h"
@@ -84,7 +85,7 @@ int kMainThreadId = kMaxThreads-1;
 void usage()
 {
    cout << "DracoSTM usage:" << endl << endl;
-   cout << "  -bench <name> - 'rbtree', 'linkedlist', 'hashmap' (or 'hashtable')" << endl;
+   cout << "  -bench <name> - 'rbtree', 'rbtreeV2', 'linkedlist', 'hashmap' (or 'hashtable')" << endl;
    cout << "                  'using_linkedlist'" << endl;
    cout << "                  'nested_tx'" << endl;
    cout << "                  'ht'" << endl;
@@ -192,6 +193,7 @@ int main(int argc, char **argv)
    for (int i = 0; i < kMaxIterations; ++i)
    {
       if ("rbtree" == bench) TestRedBlackTreeWithMultipleThreads();
+      else if ("rbtreeV2" == bench) TestRedBlackTreeV2WithMultipleThreads();
       else if ("linkedlist" == bench) TestLinkedListWithMultipleThreads();
       else if ("hashmap" == bench || "hashtable" == bench) TestHashMapWithMultipleThreads();
       else if ("using_linkedlist" == bench) TestLinkedListWithUsingLocks();
