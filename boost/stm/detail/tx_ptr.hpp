@@ -131,6 +131,56 @@ private:
 };
 
 
+
+/** "Smart pointer like", the pointer is protected in order to force the
+ * user to specify his intent (read pointer value or modify the pointer)
+ * The pointer is *not* deleted
+ */
+template <typename T>
+class protected_ptr {
+public:
+  protected_ptr(T *pointee) : trans_val(pointee) {
+  }
+
+  // Dereferencing the pointer, bypassing the protection
+  T *unsafe_get() const {
+    return trans_val.value();
+  }
+
+  // Dereferencing the pointer, safe according the transaction
+  T *get(boost::stm::transaction &t) const {
+    return t.read(trans_val).value();
+  }
+
+  // Handler to change the pointer, bypassing the protection
+  void unsafe_reset(T *new_value) {
+    trans_val.value() = new_value;
+  }
+
+  // Change the pointer value, safe according the transaction
+  void reset(T *new_value,boost::stm::transaction &t) {
+    t.write(trans_val).value() = new_value;
+  }
+
+  // Swap the pointer with another protected_ptr, safe according the transaction
+  void swap(protected_ptr<T> &rhs,boost::stm::transaction &t) {
+    T *&val1 = t.write(trans_val).value();
+    T *&val2 = t.write(rhs.trans_val).value();
+    std::swap(val1,val2);
+  }
+
+private:
+  /* Internal Pointer */
+  typedef native_trans<T *> type;
+  type trans_val;
+
+  /* Copy is not allowed */
+  protected_ptr(const protected_ptr &);
+  const protected_ptr& operator=(const protected_ptr&);
+};
+
+
+
 }}
 #endif
 
