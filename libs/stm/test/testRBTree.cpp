@@ -169,7 +169,6 @@ void TestRedBlackTreeWithMultipleThreads()
    cout << " TX_SEC: " << transaction::bookkeeping().commits() / (totalAverageRunTime * runVector.size()) << endl;
    cout << transaction::bookkeeping() << endl;
 
-   transaction::terminate_thread();
 
 #if 0
    if ((kInsertSameValues && totalInserts != kMaxInserts) || 
@@ -190,6 +189,9 @@ void TestRedBlackTreeWithMultipleThreads()
    std::string typeOfRun = "rbTree_" + out.str();
    logCommitsAndAborts(typeOfRun);
 #endif
+
+
+   transaction::terminate_thread();
 
    rbTree->cheap_clear();
    delete rbTree;
