@@ -127,7 +127,9 @@ transaction::tss_context_map_type transaction::tss_context_map_;
 ///////////////////////////////////////////////////////////////////////////////
 void transaction::initialize()
 {
+#if USE_STM_MEMORY_MANAGER
    base_transaction_object::alloc_size(16384);
+#endif
 
    if (initialized_) return;
    initialized_ = true;

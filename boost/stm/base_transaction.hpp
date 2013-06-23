@@ -260,8 +260,6 @@ public:
 
 #if USE_STM_MEMORY_MANAGER
    static void alloc_size(size_t size) { memory_.alloc_size(size); }
-#else
-   static void alloc_size(size_t size) { }
 #endif
 
    void new_memory(size_t rhs) const { newMemory_ = rhs; }
@@ -299,7 +297,7 @@ protected:
 
       return mem;
    }
-#endif
+#endif // USE_STM_MEMORY_MANAGER
 
 private:
 
