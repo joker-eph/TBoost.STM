@@ -191,6 +191,12 @@ void transaction::initialize_thread()
    //
    //--------------------------------------------------------------------------
    lock_all_mutexes_but_this(THREAD_ID);
+   /* At this point we are sure that there is no transaction::end() in flight.
+    * We should the be able to call lock_all_mutexes_but_this() now!
+    * I'm just unsure about "invalidating_deferred_end_transaction" which does
+    * not acquire the lock_general_access(). Anyway conditional compilation can
+    * still be used to differentiate here.
+    */
 
    size_t threadId = THREAD_ID;
 
