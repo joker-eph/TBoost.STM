@@ -73,7 +73,7 @@ void* TestRedBlackTreeV2Inserts(void *threadId)
 
       for (i = startingValue; i < endingValue; ++i)
       {
-         if (!rbTree->lookup(i, found))
+         if (!rbTree->contains(i))
          {
             allFound = false;
             std::cout << "Element not found: " << i << endl;
@@ -190,7 +190,7 @@ void TestRedBlackTreeV2WithMultipleThreads()
 
    transaction::terminate_thread();
 
-   rbTree->cheap_clear();
+   rbTree->clear();
    delete rbTree;
    delete[] threads;
    delete[] threadId;

@@ -48,52 +48,67 @@ void TestRedBlackTreeV2WithMultipleThreads();
 ///////////////////////////////////////////////////////////////////////////////
 namespace nRedBlackTreeV2
 {
-   std::string const kRootStr =  "root ";
-   std::string const kLeftStr =  "left ";
-   std::string const kRightStr = "right";
 
-   enum NodeColor
-   {
-      eRed,
-      eBlack,
-      eMaxColors
-   };
+// String for prettyprint the tree
+std::string const kRootStr =  "root ";
+std::string const kLeftStr =  "left ";
+std::string const kRightStr = "right";
+std::string const colorStrings[] = {"red","black"};
+enum NodeColor { eRed, eBlack, };
 
-   std::string const colorStrings[eMaxColors] =
-   { " red ",
-     "black"
-   };
-
-class ProtectedColor : boost::stm::transaction_object<ProtectedColor>
+// This class handle the color of a node, protected by a transaction
+class ProtectedColor : public boost::stm::transaction_object<ProtectedColor>
 {
-
+   NodeColor color;
+  public:
+   ProtectedColor(NodeColor c) : color(c) {}
+   NodeColor get(boost::stm::transaction &t) const {
+     return t.read(*this).color;
+   }
+   NodeColor set(NodeColor c, boost::stm::transaction &t) {
+      return t.write(*this).color = c;
+   }
+   NodeColor unsafeSet(NodeColor c) {
+      return color = c;
+   }
 };
 
-///////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Node in the graph.
+ *
+ * Has a reference to a value (template gives the type), a color, and
+ * links to its parent and to its left and right children. The value is
+ * immutable while the other attributes are protected and need a
+ * transaction to be manipulated.
+ *
+ * It inherit from transaction_object<> so that it can be created or deleted
+ * in the context of a transaction.
+ */
 template <typename T>
-class UnprotectedRedBlackNode
+class RedBlackNode : public boost::stm::transaction_object<ProtectedColor>
 {
+  // Non copyable
+  void operator= (const RedBlackNode<T> &);
+  RedBlackNode(RedBlackNode const &);
+
 public:
-   typedef boost::stm::protected_ptr<UnprotectedRedBlackNode> protected_ptr_node;
+   // Protected pointer, need a transaction to access
+   typedef boost::stm::protected_ptr<RedBlackNode> protected_ptr_node;
+   // Type of the value
    typedef T type;
 
-    ////////////////////////////////////////////////////////////////////////////
-   UnprotectedRedBlackNode(T const &val = T())
+   // Ctor
+   RedBlackNode(T const &val = T())
      : value_(val), color_(eRed),
       parent_(0), left_(0), right_(0) {
    }
-   UnprotectedRedBlackNode(UnprotectedRedBlackNode<T> const &in)
-     : value_(in.value_), color_(in.color_),
-      parent_(in.parent_), left_(in.left_), right_(in.right_) {
-   }
 
+   // Accessors
    T const & value() const { return value_; }
-
-   NodeColor & color() { return color_; }
-   NodeColor const & color() const { return color_; }
-   bool is_red() const { return color_==eRed; }
-   bool is_black() const { return color_==eBlack; }
-
+   ProtectedColor &color() { return color_; }
+   ProtectedColor const &color() const { return color_; }
    protected_ptr_node const &  right() const { return right_; }
    protected_ptr_node & right()  { return right_; }
    protected_ptr_node const & left() const { return left_; }
@@ -103,101 +118,132 @@ public:
 
 
 private:
-//   void operator= (const UnprotectedRedBlackNode<T> &);
-
-   NodeColor color_; // FIXME MAYBE UNSAFE, should be protected ?
-   T const &value_;
-
-   protected_ptr_node left_;
-   protected_ptr_node right_;
-   protected_ptr_node parent_;
+   // Attributes
+   T const &value_;              // Value of the node (immutable)
+   ProtectedColor color_;        // Color of the node (red/black)
+   protected_ptr_node left_;     // Pointer to the left child node
+   protected_ptr_node right_;    // Pointer to the right child node
+   protected_ptr_node parent_;   // Pointer to the parent node
 };
 
 
 
-///////////////////////////////////////////////////////////////////////////////
+/** The Tree structure
+ *
+ * The value contained in the nodes have to be of the type given as template
+ * parameter.
+ * The tree keeps a node as "sentinel" (i.e. to detect leaf) instead of a NULL
+ * pointer. It also keeps a fake root as entry point to the tree, the real
+ * root (if any) is the first left child.
+ */
 template <typename T>
 class RedBlackTree
 {
 public:
 
-   // FIXME T is not necessary an int... replace -1 and -2
+   // Ctor
+   // FIXME T is not necessary an int => replace (remove?) -1 and -2
    RedBlackTree() : root_(-1), sentinel(-2)
    {
-     root_.color() = eBlack;
+     root_.color().unsafeSet(eBlack);
      root_.left().unsafe_reset(&sentinel);
      root_.right().unsafe_reset(&sentinel);
    }
 
-   //--------------------------------------------------------------------------
+
+   /*
+    * Insertion: a node is created for the value, and inserted in the tree
+    */
    bool insert(T const &value)
    {
-      using namespace boost::stm;
-      // FIXME: use macro?
-      for (transaction t; ; t.restart())
-      {
-         try { return internal_insert(value, t); }
-         catch (boost::stm::aborted_transaction_exception&) {}
-      }
-      assert(0 && "unreachable!");
+      bool result;
+      atomic(t) {
+         result=internal_insert(value, t);
+      } end_atom
+      return result;
    }
 
-   //--------------------------------------------------------------------------
-   bool lookup(T const &v, T* found)
+   /*
+    * Lookup: the value is searched in the tree. True is returned if it is
+    * found, false if it is not.
+    */
+   bool contains(T const &v)
    {
-      using namespace boost::stm;
-      // FIXME: use macro?
-      for (transaction t; ; t.restart())
-      {
-         try { return internal_lookup(v, found, t); }
-         catch (boost::stm::aborted_transaction_exception&) {}
-      }
-      assert(0 && "unreachable!");
+      bool result;
+      atomic(t) {
+         result=internal_lookup(v, t);
+      } end_atom
    }
 
-   bool remove(T const &node);
+   /*
+    * Remove the node containing the given value in the tree.
+    * Returns true if the value was present, false if it is not.
+    */
+   bool remove(T const &val);
 
+   /*
+    * Empty the tree
+    */
    void clear();
-   void cheap_clear();
 
+   /*
+    * Empty the tree, without protecting with a transaction!
+    */
+   void unsafe_clear();
+
+   /*
+    * Print the tree to a stream
+    */
    void print(std::ofstream &o);
-   void print();
 
+   /*
+    * Size of the tree (number of nodes)
+    */
    int node_count();
 
 private:
-   typedef typename UnprotectedRedBlackNode<T>::protected_ptr_node ptr_node;
-   typedef UnprotectedRedBlackNode<T> raw_node;
-   raw_node root_; // Fake root, the root of the tree is on the left
-   raw_node sentinel; // End of the tree. It's hooked to every leafs
+   /* Types for the (transaction protected) pointers to node */
+   typedef typename RedBlackNode<T>::protected_ptr_node ptr_node;
+   /* Types for the (raw, aka unprotected) nodes */
+   typedef RedBlackNode<T> raw_node;
+
+   raw_node root_;    // Fake root, the root of the tree is on the left
+   raw_node sentinel; // End of the tree. It's hooked to each leaf
 
    ptr_node &root() { return root_.left(); };
    ptr_node const &root() const { return root_.left(); };
    bool is_sentinel(raw_node const *node) const { return node==&sentinel; }
 
+   // Internal helpers to implement the public interface
    int internal_node_count(ptr_node const &cur, boost::stm::transaction &t);
-   bool internal_remove(T const &inNode, boost::stm::transaction &inT);
+   bool internal_remove(T const &val, boost::stm::transaction &inT);
    bool internal_insert(T const &val, boost::stm::transaction &inT);
-   bool internal_lookup(T const &v, const T* found, boost::stm::transaction &inT);
-
-   void internal_cheap_clear(raw_node *cur);
+   bool internal_lookup(T const &v, boost::stm::transaction &inT);
+   void internal_unsafe_clear(raw_node *cur);
    void internal_clear(raw_node *cur, boost::stm::transaction &t);
    void internal_remove_help(raw_node *cur, boost::stm::transaction &t);
-   const raw_node* get_successor(raw_node *cur, boost::stm::transaction &t) const;
-
-   void internal_print(int const &i, std::string const &outputStr, 
-       raw_node *cur);
    void internal_print(int const &i, std::string const &outputStr,
        raw_node *cur, std::ofstream &o, boost::stm::transaction &t);
    raw_node* binary_insert(T const &val, boost::stm::transaction &t);
 
-   // Rotation
-   // The direction is given by the template parameters
-   // rotate<LEFT,RIGHT> is a left rotation
-   // rotate<RIGHT,LEFT> is a right rotation
+   /* Walk the tree to find the lexicographic successor for a given node */
+   const raw_node* get_successor(raw_node *cur, boost::stm::transaction &t) const;
+
+   /* Rotation
+    * The direction is given by the template parameters
+    * rotate<LEFT,RIGHT> is a left rotation
+    * rotate<RIGHT,LEFT> is a right rotation
+    */
    template<ptr_node &(raw_node::*LEFT)(), ptr_node &(raw_node::*RIGHT)()>
    void rotate(raw_node *node, boost::stm::transaction &t);
 
+
+   /* Fix the tree invariant (coloring, depth)
+    * The direction is given by the template parameters
+    * fixup<LEFT,RIGHT> is normal and fixup<RIGHT,LEFT> is reversed
+    * The algorithm is symmetric, so I rely on the template parameter to
+    * instanciate both version.
+    */
    template<ptr_node &(raw_node::*LEFT)(), ptr_node &(raw_node::*RIGHT)()>
    void fixup(raw_node *&grandParent,
        raw_node *&parent,
@@ -207,70 +253,75 @@ private:
 
 
 
-//--------------------------------------------------------------------------
+/*
+ * Helper that implements the lookup of a value in the tree.
+ */
 template <typename T>
-inline bool RedBlackTree<T>::internal_lookup(T const &v, const T* found, boost::stm::transaction &t)
+inline bool RedBlackTree<T>::internal_lookup(T const &v, boost::stm::transaction &t)
 {
+   // Start at the root
    raw_node *cur = root().get(t);
 
+   // Iterate until a leaf is found
    while (!is_sentinel(cur))
    {
+      // Should be impossible (assert instead?)
       if (NULL == cur) throw boost::stm::aborted_transaction_exception("altered tree");
-      const T &curVal = cur->value();
-      if (curVal== v)
+
+      // If the value is found, we end the transaction and return true
+      if (cur->value()== v)
       {
-         found = &cur->value();
          t.end();
          return true;
       }
-
-      cur = curVal > v ? cur->left().get(t) : cur->right().get(t);
+      // Next node is left if the current one is bigger than v, right else
+      cur = cur->value() > v ? cur->left().get(t) : cur->right().get(t);
    }
-
+   // We reached a leaf, v is not present in the tree, return false.
    return false;
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Insert a given value in a new node and hook it in the tree
+ * If the value exists in the tree, returns NULL
+ */
 template <typename T>
 inline typename RedBlackTree<T>::raw_node* RedBlackTree<T>::binary_insert(T const &val,
       boost::stm::transaction &t)
 {
    raw_node *parent = &root_;
    raw_node *cur = root().get(t);
+
+   // Walk through the tree until we find a leaf (insertion point)
    while (!is_sentinel(cur))
    {
-      // FIXME: NULL Should be impossible by construction, assert here? At least add a comment
+      // Should be impossible by construction, assert here? At least add a comment
       if (NULL == cur) throw boost::stm::aborted_transaction_exception("altered tree");
 
-      const T &curVal = cur->value();
-      if (curVal== val)
+      // If the value is already present in the tree, we end the transaction
+      // and return NULL
+      if (cur->value() == val)
       {
          t.end();
          return NULL;
       }
-
-      parent = cur;
-      cur = curVal > val ? cur->left().get(t) : cur->right().get(t);
+      // Next node is left if the current one is bigger than v, right else
+      cur = cur->value() > val ? cur->left().get(t) : cur->right().get(t);
    }
 
    // At exit of the loop, "cur" points to a leaf, we create a node and
    // hook it to parent
 
-
-   // create a "rawNode" first for efficiency, if we create a ProtectedNode we would have
-   // to record it in the transaction to write the parent.
+   // create a "rawNode" first for efficiency, if we create a ProtectedNode we
+   // would have to record it in the transaction to write the parent.
    raw_node *newRawNode = new raw_node(val);
    newRawNode->left().unsafe_reset(&sentinel);
    newRawNode->right().unsafe_reset(&sentinel);
    newRawNode->parent().unsafe_reset(parent);
 
-   // FIXME, do not leak if transaction abort
-   // The issue is that the class must inherit from transaction_object
-   // and have its destructor virtual. The other options are:
-   // - having my own handler in the transansaction loop, i.e. delete myself when it fails
-   // - creating the node outside of the transaction
-   //newRawNode = t.as_new(newRawNode);
+   // Do not leak if transaction aborts: register the new node.
+   newRawNode = t.as_new(newRawNode);
 
    // in the event parent is the dummy root, newNode should be to its left()
    if(parent==&root_ || parent->value() > val) parent->left().reset(newRawNode,t);
@@ -279,7 +330,15 @@ inline typename RedBlackTree<T>::raw_node* RedBlackTree<T>::binary_insert(T cons
    return newRawNode;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Rotation
+ *
+ * During "fixup" of the Red-Black-Tree invariants, some "rotation" are needed.
+ * Rotation can be either left or right, since the algorithm is symmetric, it
+ * is implemented once for the LEFT rotation and the RIGHT version is obtained
+ * by inverting the template parameters.
+ */
 template <typename T>
 template<
 typename RedBlackTree<T>::ptr_node &(RedBlackTree<T>::raw_node::*LEFT)(),
@@ -287,6 +346,10 @@ typename RedBlackTree<T>::ptr_node &(RedBlackTree<T>::raw_node::*RIGHT)()
 >
 inline void RedBlackTree<T>::rotate(raw_node *cur, boost::stm::transaction &t)
 {
+   // !Variables are named for a LEFT rotation!
+
+   // The rotation occurs around "cur"
+   // first gather the nodes involved
    raw_node *curParent = cur->parent().get(t);
    raw_node *rightChild = (cur->*RIGHT)().get(t);
 
@@ -295,12 +358,15 @@ inline void RedBlackTree<T>::rotate(raw_node *cur, boost::stm::transaction &t)
 
    raw_node *rightLeftGrandChild = (rightChild->*LEFT)().get(t);
 
+   // My grand child becomes direct child
    if (!is_sentinel(rightLeftGrandChild))
      rightLeftGrandChild->parent().reset(cur, t);
+   (cur->*RIGHT)().reset(rightLeftGrandChild,t);
 
+   // My child takes my place, parent link here, reverse link follows
    rightChild->parent().reset(curParent,t);
 
-   // FIXME having a bool telling if I'm left or right would avoid a spurious read here
+   // FIXME a bool telling if I'm left or right would avoid a read here
    if (cur == (curParent->*RIGHT)().get(t)) {
      (curParent->*RIGHT)().reset(rightChild,t);
    }
@@ -308,13 +374,18 @@ inline void RedBlackTree<T>::rotate(raw_node *cur, boost::stm::transaction &t)
      (curParent->*LEFT)().reset(rightChild,t);
    }
 
+   // I'm left child of my former child
    (rightChild->*LEFT)().reset(cur,t);
    cur->parent().reset(rightChild, t);
-   (cur->*RIGHT)().reset(rightLeftGrandChild,t);
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Fixup check if the current situation for a node respect the tree invariant
+ * and "fix" it locally. It involves rotation in the process.
+ * Fixup can be LEFT or RIGHT. The function is written for the LEFT version, the
+ * RIGHT one can be obtained by reverting the template parameters.
+ */
 template <typename T>
 template<
 typename RedBlackTree<T>::ptr_node &(RedBlackTree<T>::raw_node::*LEFT)(),
@@ -333,11 +404,11 @@ void RedBlackTree<T>::fixup(
   // change my parent()'s and my uncle's color to black and
   // make my grandparent() red, then move me to my grandparent()
   //--------------------------------------------------------------------
-  if (uncle->is_red())
+  if (uncle->color().get(t)==eRed)
   {
-     parent->color() = eBlack;
-     uncle->color() = eBlack;
-     grandParent->color()= eRed;
+     parent->color().set(eBlack,t);
+     uncle->color().set(eBlack,t);
+     grandParent->color().set(eRed,t);
      newNode = grandParent;
   }
   //--------------------------------------------------------------------
@@ -354,13 +425,17 @@ void RedBlackTree<T>::fixup(
         rotate<LEFT,RIGHT>(newNode, t);
      }
 
-     newNode->parent().get(t)->color() = eBlack;
-     grandParent->color() = eRed;
+     newNode->parent().get(t)->color().set(eBlack,t);
+     grandParent->color().set(eRed,t);
      rotate<RIGHT,LEFT>(grandParent, t);
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Insert a node in the tree for the given value. It the value already exists
+ * in the tree, returns false
+ */
 template <typename T>
 bool RedBlackTree<T>::internal_insert(T const & val, boost::stm::transaction &t)
 {
@@ -369,21 +444,18 @@ bool RedBlackTree<T>::internal_insert(T const & val, boost::stm::transaction &t)
    // return null and end the transactions since we don't allow duplicates
    //--------------------------------------------------------------------------
    raw_node *newNode = binary_insert(val, t);
-
    if (NULL == newNode) return false;
 
    // Insertion succeeded, now verify and enforce Red-Black invariants
 
    raw_node *parent = newNode->parent().get(t);
 
-   while (parent->is_red() && !is_sentinel(parent))
+   while (!is_sentinel(parent) /* root... */ && parent->color().get(t)==eRed)
    {
-     raw_node *grandParent = parent->parent().get(t);
+      raw_node *grandParent = parent->parent().get(t);
 
-      //-----------------------------------------------------------------------
-      // if my parent() is on the left() side of the tree
-      //-----------------------------------------------------------------------
-     if (parent == grandParent->left().get(t))
+      // if my parent() is on the left() side of the tree, I need a "LEFT" fixup
+      if (parent == grandParent->left().get(t))
       {
          fixup<&raw_node::left,&raw_node::right>(newNode,parent,grandParent,t);
       } 
@@ -394,27 +466,28 @@ bool RedBlackTree<T>::internal_insert(T const & val, boost::stm::transaction &t)
       {
         fixup<&raw_node::right,&raw_node::left>(newNode,parent,grandParent,t);
       }
+      // Walk up through the tree
       parent = newNode->parent().get(t);
   }
 
    // always set the root to black
-   raw_node *r=root().get(t);
-   if(r->color() == eRed)
-     r->color() = eBlack;
+   raw_node *r = root().get(t);
+   r->color().set(eBlack,t);
 
    t.end();
    return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//
-///////////////////////////////////////////////////////////////////////////////
+/*
+ *  Remove a given node and keep the tree invariant
+ *  FIXME: some refactoring is needed to benefit from symmetry
+ */
 template <typename T>
 void RedBlackTree<T>::internal_remove_help(raw_node *cur, boost::stm::transaction &t)
 {
    const raw_node *rootRead = root().get(t);
 
-   while ( eBlack == cur->color() && rootRead != cur)
+   while ( eBlack == cur->color().get(t) && rootRead != cur)
    {
       raw_node *curParent = cur->parent().get(t);
       raw_node *curParentLeft = curParent->left().get(t);
@@ -422,11 +495,11 @@ void RedBlackTree<T>::internal_remove_help(raw_node *cur, boost::stm::transactio
       if (cur == curParentLeft)
       {
          raw_node *sibling = curParent->right().get(t);
-         if (eRed == sibling->color())
+         if (eRed == sibling->color().get(t))
          {
-            sibling->color() = eBlack;
-            curParent->color() = eRed;
-            rotate<&UnprotectedRedBlackNode<T>::left,&UnprotectedRedBlackNode<T>::right>(curParent, t);
+            sibling->color().set(eBlack,t);
+            curParent->color().set(eRed,t);
+            rotate<&raw_node::left,&raw_node::right>(curParent, t);
             //-----------------------------------------------------------------
             // I think we have to reread parent instead of curParent since
             // left_rotate has probably changed curParent
@@ -435,19 +508,19 @@ void RedBlackTree<T>::internal_remove_help(raw_node *cur, boost::stm::transactio
             sibling = curParent->right().get(t);
          }
 
-         if (eBlack == sibling->right().get(t)->color() &&
-             eBlack == sibling->left().get(t)->color())
+         if (eBlack == sibling->right().get(t)->color().get(t) &&
+             eBlack == sibling->left().get(t)->color().get(t))
          {
-            sibling->color() = eRed;
+            sibling->color().set(eRed,t);
             cur = curParent;
          }
          else 
          {
-            if (eBlack == sibling->color())
+            if (eBlack == sibling->color().get(t))
             {
-               sibling->left().get(t)->color() = eBlack;
-               sibling->color() = eRed;
-               rotate<&UnprotectedRedBlackNode<T>::right,&UnprotectedRedBlackNode<T>::left>(sibling, t);
+               sibling->left().get(t)->color().set(eBlack,t);
+               sibling->color().set(eRed,t);
+               rotate<&raw_node::right,&raw_node::left>(sibling, t);
                //-----------------------------------------------------------------
                // I think we have to reread parent instead of curParent since
                // right_rotate has probably changed curParent
@@ -455,10 +528,10 @@ void RedBlackTree<T>::internal_remove_help(raw_node *cur, boost::stm::transactio
                curParent=cur->parent().get(t);
                sibling = curParent->right().get(t);
             }
-            sibling->color() = curParent->color();
-            curParent->color() = eBlack;
-            sibling->right().get(t)->color() = eBlack;
-            rotate<&UnprotectedRedBlackNode<T>::left,&UnprotectedRedBlackNode<T>::right>(curParent, t);
+            sibling->color().set(curParent->color().get(t),t);
+            curParent->color().set(eBlack,t);
+            sibling->right().get(t)->color().set(eBlack,t);
+            rotate<&raw_node::left,&raw_node::right>(curParent, t);
             break;
          }         
       } 
@@ -466,11 +539,11 @@ void RedBlackTree<T>::internal_remove_help(raw_node *cur, boost::stm::transactio
       { 
          raw_node *sibling = curParentLeft;
 
-         if (eRed == sibling->color())
+         if (eRed == sibling->color().get(t))
          {
-            sibling->color() = eBlack;
-            curParent->color() = eRed;
-            rotate<&UnprotectedRedBlackNode<T>::right,&UnprotectedRedBlackNode<T>::left>(curParent, t);
+            sibling->color().set(eBlack,t);
+            curParent->color().set(eRed,t);
+            rotate<&raw_node::right,&raw_node::left>(curParent, t);
             //-----------------------------------------------------------------
             // I think we have to read_parent instead of curParent since
             // right_rotate could have changed curParent
@@ -479,19 +552,19 @@ void RedBlackTree<T>::internal_remove_help(raw_node *cur, boost::stm::transactio
             sibling = curParent->right().get(t);
          }
 
-         if (eBlack == sibling->right().get(t)->color() &&
-             eBlack == sibling->left().get(t)->color())
+         if (eBlack == sibling->right().get(t)->color().get(t) &&
+             eBlack == sibling->left().get(t)->color().get(t))
          {
-            sibling->color() = eRed;
+            sibling->color().set(eRed,t);
             cur = curParent;
          } 
          else 
          {
-            if (eBlack == sibling->color())
+            if (eBlack == sibling->color().get(t))
             {
-               sibling->right().get(t)->color() = eBlack;
-               sibling->color() = eRed;
-               rotate<&UnprotectedRedBlackNode<T>::left,&UnprotectedRedBlackNode<T>::right>(sibling, t);
+               sibling->right().get(t)->color().set(eBlack,t);
+               sibling->color().set(eRed,t);
+               rotate<&raw_node::left,&raw_node::right>(sibling, t);
                //-----------------------------------------------------------------
                // I think we have to reread parent instead of curParent since
                // left_rotate has probably changed curParent
@@ -499,29 +572,35 @@ void RedBlackTree<T>::internal_remove_help(raw_node *cur, boost::stm::transactio
                curParent=cur->parent().get(t);
                sibling = curParent->left().get(t);
             }
-            sibling->color() = curParent->color();
-            curParent->color() = eBlack;
-            sibling->left().get(t)->color() = eBlack;
-            rotate<&UnprotectedRedBlackNode<T>::right,&UnprotectedRedBlackNode<T>::left>(curParent, t);
+            sibling->color().set(curParent->color().get(t),t);
+            curParent->color().set(eBlack,t);
+            sibling->left().get(t)->color().set(eBlack,t);
+            rotate<&raw_node::right,&raw_node::left>(curParent, t);
             break;
          }
       }
    }
 
-   cur->color() = eBlack;
+   cur->color().set(eBlack,t);
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Walk the tree to find the node containing the next value in the tree.
+ * Return sentinel if no successor can be found
+ */
 template <typename T>
 const typename RedBlackTree<T>::raw_node* RedBlackTree<T>::get_successor(raw_node *cur, boost::stm::transaction &t) const
 {
    raw_node *rightChild = cur->right().get(t);
 
+   /* If I have a right child, the next value is the leftmost node in this
+    * subtree!
+    */
    if (!is_sentinel(rightChild))
    {
-     cur = rightChild;
-     raw_node *prev;
+      cur = rightChild;
 
+      raw_node *prev;
       do {
         prev = cur;
         cur = cur->left().get(t);
@@ -531,6 +610,10 @@ const typename RedBlackTree<T>::raw_node* RedBlackTree<T>::get_successor(raw_nod
    }
    else 
    {
+      /* I don't have a right child... Then I have to walk up the tree. I have
+       * to walk until I am left to the next parent. This parent is the next
+       * node.
+       */
       raw_node *parent = cur->parent().get(t);
    
       while (cur == parent->right().get(t))
@@ -544,101 +627,105 @@ const typename RedBlackTree<T>::raw_node* RedBlackTree<T>::get_successor(raw_nod
    }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Clear the tree without protecting by any transaction
+ */
 template <typename T>
-void RedBlackTree<T>::cheap_clear()
+void RedBlackTree<T>::unsafe_clear()
 {
-   internal_cheap_clear(root().unsafe_get());
+   internal_unsafe_clear(root().unsafe_get());
 
    root_.left().unsafe_reset(&sentinel);
    root_.right().unsafe_reset(&sentinel);
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Recursively delete every node in the tree
+ */
 template <typename T>
-void RedBlackTree<T>::internal_cheap_clear(raw_node *cur)
+void RedBlackTree<T>::internal_unsafe_clear(raw_node *cur)
 {
    if (is_sentinel(cur)) return;
 
-   internal_cheap_clear(cur->left().unsafe_get());
-   internal_cheap_clear(cur->right().unsafe_get());
+   internal_unsafe_clear(cur->left().unsafe_get());
+   internal_unsafe_clear(cur->right().unsafe_get());
 
    delete cur;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Clear the tree, protected version
+ */
 template <typename T>
 void RedBlackTree<T>::clear()
 {
-   using namespace boost::stm;
-   transaction t;
-
-   raw_node *curLeft = root().read(t);
-   internal_clear(curLeft, t);
-
-   curLeft->left().reset(&sentinel, t);
-   curLeft->right().reset(&sentinel, t);
-
-   return t.end();
+   atomic(t) {
+      raw_node *curLeft = root().get(t);
+      internal_clear(curLeft, t);
+      curLeft->left().reset(&sentinel, t);
+      curLeft->right().reset(&sentinel, t);
+   } end_atom
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Recursively attach every node in the tree to a transaction, marked for
+ * deletion (atomically).
+ */
 template <typename T>
 void RedBlackTree<T>::internal_clear(raw_node *cur, boost::stm::transaction &t)
 {
    if (is_sentinel(cur)) return;
-   raw_node const &curRead = cur->get(t);
-   if (!is_sentinel(curRead.left()))
+   if (!is_sentinel(cur->left().get(t)))
    {
-      internal_clear(curRead.left(), t);
+      internal_clear(cur->left().get(t), t);
    }
-   if (!is_sentinel(curRead->right()))
+   if (!is_sentinel(cur->right().get(t)))
    {
-      internal_clear(curRead->right(), t);
+      internal_clear(cur->right().get(t), t);
    }
 
-   t.delete_memory(cur);
+   t.delete_memory(*cur);
+}
+
+/*
+ * Remove a value from the tree. Return true on success, false if not found.
+ */
+template <typename T>
+bool RedBlackTree<T>::remove(T const &val)
+{
+   bool result;
+   atomic(t) {
+      result = internal_remove(val, t);
+   } end_atom
+   return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 template <typename T>
-bool RedBlackTree<T>::remove(T const &inNode)
+bool RedBlackTree<T>::internal_remove(T const &val, boost::stm::transaction &t)
 {
-   using namespace boost::stm;
-
-   for (transaction t; ; t.restart())
-   {
-      try { return internal_remove(inNode, t); }
-      catch (boost::stm::aborted_transaction_exception&) {}
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-template <typename T>
-bool RedBlackTree<T>::internal_remove(T const &inNode, boost::stm::transaction &t)
-{
-   t.begin(); // FIXME Macros?
-
    raw_node *cur = root().get(t);
 
-   // find node inNode in our tree then delete it
-   for (; !is_sentinel(cur); )
+   // find node val in the tree
+   while(!is_sentinel(cur))
    {
+      // Should be impossible, assert instead?
       if (NULL == cur) throw boost::stm::aborted_transaction_exception("altered tree");
-      if (cur->value() == inNode) break;
-      cur = cur->value() > inNode ? cur->left().get(t) : cur->right().get(t);
+      if (cur->value() == val) break; // Value is found
+      // Walk down the tree
+      cur = cur->value() > val ? cur->left().get(t) : cur->right().get(t);
    }
 
    //--------------------------------------------------------------------------
    // if the node wasn't found, exit
    //--------------------------------------------------------------------------
-   if (cur->value() != inNode) return false;
+   if (cur->value() != val) return false;
 
+   //
    raw_node *succ = (is_sentinel(cur->left().get(t)) || is_sentinel(cur->right().get(t)))
                 ? cur : const_cast<raw_node *>(get_successor(cur, t));
+
    // The previous const_cast is only because get_successor() may return sentinel.
    // then assert here by security
    assert(!is_sentinel(succ) && "Sentinel unexpected here!");
@@ -653,7 +740,6 @@ bool RedBlackTree<T>::internal_remove(T const &inNode, boost::stm::transaction &
    if (root().get(t) == succParent) root().reset(succSuccLeftChild,t);
    else if (succ == succParent->left().get(t)) succParent->left().reset(succSuccLeftChild,t);
    else succParent->right().reset(succSuccLeftChild,t);
-
 
    if (succ != cur)
    {
@@ -671,35 +757,36 @@ bool RedBlackTree<T>::internal_remove(T const &inNode, boost::stm::transaction &
       if (cur == curParent->left().get(t)) curParent->left().reset(succ,t);
       else curParent->right().reset(succ,t);
 
-      succ->color() = cur->color(); // FIXME unprotected
+      succ->color().set(cur->color().get(t),t);
    }
-   if (eBlack == succ->color())
+   if (eBlack == succ->color().get(t))
      internal_remove_help(succSuccLeftChild, t);
 
-//   t.delete_memory(*cur); FIXME??
+   // Mark for deletion on transaction success
+   t.delete_memory(*cur);
 
-   t.end();
    return true;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Return the number of node in the tree
+ */
 template <typename T>
 int RedBlackTree<T>::node_count()
 {
-   using namespace std;
-   int i;
+   int ncount;
    atomic(t) {
-     i = internal_node_count(root(), t);
+     ncount = internal_node_count(root(), t);
    } end_atom
-   return i;
+   return ncount;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Return the number of node in the tree
+ */
 template <typename T>
 int RedBlackTree<T>::internal_node_count(ptr_node const &cur, boost::stm::transaction &t)
 {
-   using namespace std;
-
    // Access to the node by reading
    raw_node const *curRead = cur.get(t);
 
@@ -712,12 +799,12 @@ int RedBlackTree<T>::internal_node_count(ptr_node const &cur, boost::stm::transa
    return i;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Print a textual representation of the tree
+ */
 template <typename T>
 void RedBlackTree<T>::print(std::ofstream &o)
 {
-   using namespace std;
-
    int i = 0;
 
    atomic(t) {
@@ -728,7 +815,9 @@ void RedBlackTree<T>::print(std::ofstream &o)
    } end_atom // FIXME CATCH and clear "o"
 }
 
-///////////////////////////////////////////////////////////////////////////////
+/*
+ * Print a textual representation of the tree
+ */
 template <typename T>
 void RedBlackTree<T>::internal_print(int const &i, std::string const &outputStr,
    raw_node *cur, std::ofstream &o, boost::stm::transaction &t)
@@ -745,36 +834,6 @@ void RedBlackTree<T>::internal_print(int const &i, std::string const &outputStr,
 
    internal_print(i + 1, kLeftStr, cur->left().get(t), o,t);
    internal_print(i + 1, kRightStr, cur->right().get(t), o,t);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-template <typename T>
-void RedBlackTree<T>::print()
-{
-   using namespace std;
-
-   int i = 0;
-
-   std::cout << "[ size: " << i << " ]" << endl;
-   internal_print(i, kRootStr, root().unsafe_get());
-   std::cout << endl;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-template <typename T>
-void RedBlackTree<T>::internal_print(int const &i, std::string const &outputStr,
-   raw_node *cur)
-{
-   using namespace std;
-   if (is_sentinel(cur)) return;
-   else
-   {
-     std::cout << "[ " << outputStr << " - " << colorStrings[cur->color()] << " " << i
-       << " ]: " << cur->value() << "\n";
-   }
-
-   internal_print(i + 1, kLeftStr, cur->left().unsafe_get());
-   internal_print(i + 1, kRightStr, cur->right().unsafe_get());
 }
 
 }
